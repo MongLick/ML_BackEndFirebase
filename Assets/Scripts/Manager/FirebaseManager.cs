@@ -1,5 +1,6 @@
 using Firebase;
 using Firebase.Auth;
+using Firebase.Database;
 using UnityEngine;
 
 public class FirebaseManager : MonoBehaviour
@@ -15,6 +16,9 @@ public class FirebaseManager : MonoBehaviour
 
     private static bool isValid;
     public static bool IsValid { get { return isValid; } }
+
+    private static FirebaseDatabase db;
+    public static FirebaseDatabase DB { get { return db; } }
 
     private void Awake()
     {
@@ -40,23 +44,21 @@ public class FirebaseManager : MonoBehaviour
         DependencyStatus dependencyStatus = await FirebaseApp.CheckAndFixDependenciesAsync();
         if (dependencyStatus == DependencyStatus.Available)
         {
-            // Create and hold a reference to your FirebaseApp,
-            // where app is a Firebase.FirebaseApp property of your application class.
             app = FirebaseApp.DefaultInstance;
             auth = FirebaseAuth.DefaultInstance;
+            db = FirebaseDatabase.DefaultInstance;
 
-            // Set a flag here to indicate whether Firebase is ready to use by your app.
             Debug.Log("Firebase Check and FixDependencies success");
             isValid = true;
         }
         else
         {
-            // Firebase Unity SDK is not safe to use here.
             Debug.LogError("Firebase Check and FixDependencies fail");
             isValid = false;
 
             app = null;
             auth = null;
+            db = null;
         }
     }
 }

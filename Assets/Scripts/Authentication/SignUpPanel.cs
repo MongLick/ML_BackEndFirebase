@@ -1,3 +1,4 @@
+using Firebase.Database;
 using Firebase.Extensions;
 using TMPro;
 using UnityEngine;
@@ -34,6 +35,21 @@ public class SignUpPanel : MonoBehaviour
             SetInteractable(true);
             return;
         }
+
+        FirebaseManager.DB.
+            GetReference("Userdata/monglick/level").
+            GetValueAsync().
+            ContinueWithOnMainThread(task =>
+        {
+            if(task.IsCanceled)
+            {
+                return;
+            }
+            else if(task.IsFaulted)
+            {
+                return;
+            }
+        });
 
         FirebaseManager.Auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task => 
         { 

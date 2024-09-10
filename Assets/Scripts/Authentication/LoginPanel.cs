@@ -5,65 +5,73 @@ using UnityEngine.UI;
 
 public class LoginPanel : MonoBehaviour
 {
-    [SerializeField] PanelController panelController;
+	[SerializeField] PanelController panelController;
 
-    [SerializeField] TMP_InputField emailInputField;
-    [SerializeField] TMP_InputField passInputField;
+	[SerializeField] TMP_InputField emailInputField;
+	[SerializeField] TMP_InputField passInputField;
 
-    [SerializeField] Button signUpButton;
-    [SerializeField] Button loginButton;
-    [SerializeField] Button resetPasswordButton;
+	[SerializeField] Button signUpButton;
+	[SerializeField] Button loginButton;
+	[SerializeField] Button resetPasswordButton;
 
 
-    private void Awake()
-    {
-        signUpButton.onClick.AddListener(SignUp);
-        loginButton.onClick.AddListener(Login);
-        resetPasswordButton.onClick.AddListener(ResetPassword);
-    }
+	private void Awake()
+	{
+		signUpButton.onClick.AddListener(SignUp);
+		loginButton.onClick.AddListener(Login);
+		resetPasswordButton.onClick.AddListener(ResetPassword);
+	}
 
-    public void SignUp()
-    {
-        panelController.SetActivePanel(PanelController.Panel.SignUp);
-    }
+	public void SignUp()
+	{
+		panelController.SetActivePanel(PanelController.Panel.SignUp);
+	}
 
-    private void ResetPassword()
-    {
+	private void ResetPassword()
+	{
+		panelController.SetActivePanel(PanelController.Panel.Reset);
+	}
 
-    }
+	public void Login()
+	{
+		SetInteractable(false);
+		string email = emailInputField.text;
+		string password = passInputField.text;
 
-    public void Login()
-    {
-        SetInteractable(false);
-        string email = emailInputField.text;
-        string password = passInputField.text;
-
-        FirebaseManager.Auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
-        {
-            if(task.IsCanceled)
-            {
-                panelController.ShowInfo("SignInWithEmailAndPasswordAsync cancelde");
+		FirebaseManager.Auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
+		{
+			if (task.IsCanceled)
+			{
+				panelController.ShowInfo("SignInWithEmailAndPasswordAsync cancelde");
 				SetInteractable(true);
 				return;
-            }
-            else if(task.IsFaulted)
-            {
-                panelController.ShowInfo($"SignInWithEmailAndPasswordAsync failed : {task.Exception.Message}");
+			}
+			else if (task.IsFaulted)
+			{
+				panelController.ShowInfo($"SignInWithEmailAndPasswordAsync failed : {task.Exception.Message}");
 				SetInteractable(true);
 				return;
-            }
+			}
 
-            panelController.SetActivePanel(PanelController.Panel.Verify);
-            SetInteractable(true);
-        });
-    }
+			if (FirebaseManager.Auth.CurrentUser.IsEmailVerified)
+			{
+				panelController.SetActivePanel(PanelController.Panel.Main);
+			}
+			else
+			{
+				panelController.SetActivePanel(PanelController.Panel.Verify);
+			}
 
-    private void SetInteractable(bool interactable)
-    {
-        emailInputField.interactable = interactable;
-        passInputField.interactable = interactable;
-        signUpButton.interactable = interactable;
-        loginButton.interactable = interactable;
-        resetPasswordButton.interactable = interactable;
-    }
+			SetInteractable(true);
+		});
+	}
+
+	private void SetInteractable(bool interactable)
+	{
+		emailInputField.interactable = interactable;
+		passInputField.interactable = interactable;
+		signUpButton.interactable = interactable;
+		loginButton.interactable = interactable;
+		resetPasswordButton.interactable = interactable;
+	}
 }

@@ -20,7 +20,48 @@ public class VerifyPanel : MonoBehaviour
         sendButton.onClick.AddListener(SendVerifyMail);
     }
 
-    private void Logout()
+    private IEnumerator VerifyCheckRoutine()
+    {
+        while(true)
+        {
+            yield return new WaitForSeconds(3f);
+
+            FirebaseManager.Auth.CurrentUser.ReloadAsync().ContinueWithOnMainThread(task =>
+            {
+                if(task.IsCanceled)
+                {
+                    panelController.ShowInfo("ReloadAsync canceled");
+                    return;
+                }
+                else if(task.IsFaulted)
+                {
+                    panelController.ShowInfo($"ReloadAsync failed : {task.Exception.Message}");
+                    return;
+                }
+                if(FirebaseManager.Auth.CurrentUser.IsEmailVerified)
+                {
+                    panelController.SetActivePanel(PanelController.Panel.Main);
+                }
+            });
+        }
+    }
+
+	private void OnEnable()
+	{
+        if(FirebaseManager.Auth == null)
+        {
+            return;
+        }
+        
+		StartCoroutine(VerifyCheckRoutine());
+	}
+
+	private void OnDisable()
+	{
+		StopAllCoroutines();
+	}
+
+	private void Logout()
     {
         FirebaseManager.Auth.SignOut();
         panelController.SetActivePanel(PanelController.Panel.Login);
@@ -40,6 +81,8 @@ public class VerifyPanel : MonoBehaviour
                 panelController.ShowInfo($"SendEmailVerificationAsync failed : {task.Exception.Message}");
                 return;
 			}
+
+            panelController.ShowInfo("SendEmailVerificationAsync success");
         });
     }
 }
