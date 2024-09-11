@@ -1,25 +1,37 @@
 using Firebase.Database;
 using Firebase.Extensions;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UserPanel : MonoBehaviour
 {
+	[SerializeField] TMP_Text nickNameText;
+	[SerializeField] TMP_InputField nickNameInputField;
+	[SerializeField] Button nickNameChangeButton;
+
+	private UserData userData;
+
+	private void Awake()
+	{
+		nickNameChangeButton.onClick.AddListener(ChangeNickName);
+	}
+
 	private void Start()
 	{
-		FirebaseManager.DB.
-			GetReference("UserData").Child("monglick").
-			GetValueAsync().
-			ContinueWithOnMainThread(task =>
+		FirebaseManager.DB
+			.GetReference("UserData")
+			.Child(FirebaseManager.Auth.CurrentUser.UserId)
+			.GetValueAsync()
+			.ContinueWithOnMainThread(task =>
 			{
 				if(task.IsCanceled)
 				{
-					Debug.Log("Get userdata canceled");
-					return;
+					Debug.Log("취소");
 				}
 				else if(task.IsFaulted)
 				{
-					Debug.Log($"Get userdata failed : {task.Exception.Message}");
-					return;
+					Debug.Log("오류");
 				}
 
 				DataSnapshot snapShot = task.Result;
@@ -27,16 +39,39 @@ public class UserPanel : MonoBehaviour
 				{
 					string json = snapShot.GetRawJsonValue();
 					Debug.Log(json);
-					UserData userData = JsonUtility.FromJson<UserData>(json);
 
-					Debug.Log(userData.nickName);
-					Debug.Log(userData.level);
-					Debug.Log(userData.type);
+					userData = JsonUtility.FromJson<UserData>(json);
+					nickNameText.text = userData.nickName;
 				}
 				else
 				{
-					UserData userData = new UserData();
+					userData = new UserData();
+					nickNameText.text = userData.nickName;
 				}
-			});	
+			});
+	}
+
+	public void ChangeNickName()
+	{
+		string nickName = nickNameInputField.text;
+		FirebaseManager.DB
+			.GetReference("UserData")
+			.Child(FirebaseManager.Auth.CurrentUser.UserId)
+			.Child("nickName")
+			.SetValueAsync(nickName)
+			.ContinueWithOnMainThread(task =>
+			{
+				if (task.IsCanceled)
+				{
+					Debug.Log("취소");
+				}
+				else if (task.IsFaulted)
+				{
+					Debug.Log("오류");
+				}
+
+				nickNameText.text = nickName;
+				Debug.Log("닉네임 재설정 완료");
+			});
 	}
 }
